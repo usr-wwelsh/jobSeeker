@@ -19,7 +19,7 @@ _CANDIDATE_MULTIPLIER = 5
 def _get_collection():
     client = chromadb.PersistentClient(path=str(CHROMA_PATH))
     emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name="all-MiniLM-L6-v2"
+        model_name="intfloat/e5-small-v2"
     )
     return client.get_collection(name="portfolio_code", embedding_function=emb_fn)
 

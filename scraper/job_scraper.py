@@ -5,7 +5,7 @@ Usage:
     python -m scraper.job_scraper
 """
 import sqlite3
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -65,7 +65,7 @@ def scrape_and_store() -> int:
     combined = combined.drop_duplicates(subset=["job_url"], keep="first")
     combined = combined[combined["job_url"].notna()]
 
-    scraped_at = datetime.now(UTC).isoformat()
+    scraped_at = datetime.now(timezone.utc).isoformat()
     inserted = 0
 
     with sqlite3.connect(db_path) as conn:
