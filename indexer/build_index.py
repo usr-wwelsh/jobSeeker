@@ -35,25 +35,72 @@ EXTENSION_TO_LANGUAGE = {
     ".rs": "rust", ".go": "go", ".java": "java",
 }
 
+# Directories that contain generated/vendored/non-authored code
+SKIP_DIRS = {
+    ".git", "node_modules", "__pycache__", "dist", "build",
+    "vendor", ".venv", "venv", ".tox", ".mypy_cache",
+    ".pytest_cache", "target", "out", ".next", ".nuxt",
+}
 
-def chunk_text(text: str, chunk_size: int = 600, overlap: int = 100) -> list[str]:
-    chunks = []
-    start = 0
-    while start < len(text):
-        end = start + chunk_size
-        chunks.append(text[start:end])
-        start += chunk_size - overlap
+# Skip files larger than this — likely minified or generated
+MAX_FILE_BYTES = 150_000
+
+# Discard chunks shorter than this — avoids indexing closing braces etc.
+MIN_CHUNK_CHARS = 80
+
+
+def chunk_text(text: str, chunk_size: int = 1500, overlap: int = 150) -> list[str]:
+    """
+    Split text into overlapping chunks respecting line boundaries.
+    Larger chunks give the embedding model enough context to be meaningful.
+    """
+    lines = text.splitlines(keepends=True)
+    chunks: list[str] = []
+    current_lines: list[str] = []
+    current_chars = 0
+
+    for line in lines:
+        current_lines.append(line)
+        current_chars += len(line)
+
+        if current_chars >= chunk_size:
+            chunk = "".join(current_lines).strip()
+            if len(chunk) >= MIN_CHUNK_CHARS:
+                chunks.append(chunk)
+            # Retain the last `overlap` chars of lines for the next chunk
+            overlap_lines: list[str] = []
+            overlap_chars = 0
+            for ln in reversed(current_lines):
+                overlap_lines.insert(0, ln)
+                overlap_chars += len(ln)
+                if overlap_chars >= overlap:
+                    break
+            current_lines = overlap_lines
+            current_chars = overlap_chars
+
+    # Final partial chunk
+    if current_lines:
+        chunk = "".join(current_lines).strip()
+        if len(chunk) >= MIN_CHUNK_CHARS:
+            chunks.append(chunk)
+
     return chunks
 
 
 def iter_repo_files(repo_path: Path):
     for root, dirs, files in os.walk(repo_path):
-        # Skip .git internals
-        dirs[:] = [d for d in dirs if d != ".git"]
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
         for fname in files:
-            ext = Path(fname).suffix.lower()
-            if ext in ALLOWED_EXTENSIONS:
-                yield Path(root) / fname
+            fpath = Path(root) / fname
+            ext = fpath.suffix.lower()
+            if ext not in ALLOWED_EXTENSIONS:
+                continue
+            try:
+                if fpath.stat().st_size > MAX_FILE_BYTES:
+                    continue
+            except OSError:
+                continue
+            yield fpath
 
 
 def index_repos(incremental: bool = False):
@@ -118,7 +165,6 @@ def index_repos(incremental: bool = False):
                         "file": str(rel_path),
                         "full_url": full_url,
                         "language": language,
-                        "content_preview": chunk[:500],
                     }
                 )
                 ids.append(chunk_id)
