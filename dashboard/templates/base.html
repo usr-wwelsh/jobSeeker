@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}jobSeeker{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+
+  <nav class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
+    <a href="/jobs" class="font-semibold text-lg tracking-tight">jobSeeker</a>
+    <div class="flex items-center gap-4">
+      <form hx-post="/scrape" hx-target="#scrape-result" hx-swap="innerHTML">
+        <button type="submit"
+          class="text-sm px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-100 transition">
+          Run Scrape
+        </button>
+      </form>
+      <a href="/logout" class="text-sm text-gray-500 hover:text-gray-800">Logout</a>
+    </div>
+  </nav>
+
+  <div id="scrape-result" class="px-6 pt-2 text-sm"></div>
+
+  <main class="px-6 py-6 max-w-5xl mx-auto">
+    {% block content %}{% endblock %}
+  </main>
+
+</body>
+</html>
