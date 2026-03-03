@@ -8,7 +8,7 @@ A local-first job-hunting engine that indexes your GitHub portfolio into a vecto
 2. **Scraper** — pulls fresh job listings daily via [JobSpy](https://github.com/speedyapply/JobSpy) (LinkedIn + Indeed)
 3. **Matcher** — semantic search finds the code from your portfolio most relevant to each job description
 4. **Prompt builder** — assembles a ready-to-copy prompt referencing your actual files and repos
-5. **Dashboard** — private web UI to browse jobs, generate prompts, and track application status
+5. **Dashboard** — private web UI to browse scraped jobs, generate prompts, track application status, and manually generate prompts from any job description you paste in
 
 You copy the prompt into any chatbot (ChatGPT, Claude, Gemini, etc.) to produce the final pitch. No API keys required for the core workflow.
 
@@ -69,7 +69,11 @@ Scrapes LinkedIn and Indeed for founding/early-stage roles and internships/new-g
 uvicorn dashboard.app:app --reload --port 8080
 ```
 
-Open http://localhost:8080, log in with your `DASHBOARD_PASSWORD`, browse jobs, and click **Generate Prompt** on any listing.
+Open http://localhost:8080 and log in with your `DASHBOARD_PASSWORD`.
+
+- **Jobs** — browse scraped listings, click any job, hit **Generate Prompt** to build a personalized pitch
+- **Manual Prompt** (nav bar) — paste any job description from anywhere to get a matched prompt instantly, no scraping needed
+- **Run Scrape** (nav bar) — trigger a manual scrape on demand
 
 The dashboard also runs a daily scrape automatically at 9am EST (14:00 UTC) via APScheduler.
 
@@ -93,6 +97,12 @@ jobSeeker/
 │   ├── app.py              # FastAPI app
 │   ├── db.py               # SQLite helpers
 │   └── templates/          # Jinja2 + Tailwind + HTMX
+│       ├── base.html        # nav, shared layout
+│       ├── login.html
+│       ├── jobs.html        # scraped job list
+│       ├── job.html         # job detail + prompt
+│       ├── manual.html      # paste-in prompt generator
+│       └── manual_result.html
 ├── data/                   # gitignored — generated locally
 │   ├── repos/              # cloned repos (never auto-deleted)
 │   ├── chroma_data/        # ChromaDB persistent store
