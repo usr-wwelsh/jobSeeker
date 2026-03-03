@@ -35,7 +35,7 @@ cp .env.example .env
 Edit `.env`:
 
 ```
-YOUR_NAME=Jane Smith
+YOUR_NAME=Jane Smith   # Your full name (required for prompt generation)
 GITHUB_USERNAME=your-github-username
 DASHBOARD_PASSWORD=pick-a-strong-password
 GITHUB_TOKEN=ghp_...   # optional but recommended
