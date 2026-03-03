@@ -16,7 +16,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from dashboard.db import get_job, get_jobs, init_db, update_job_status
-from prompt_builder.build_prompt import generate as build_prompt
+from prompt_builder.build_prompt import generate as build_prompt, generate_from_raw
 from scraper.job_scraper import scrape_and_store
 
 # ---------------------------------------------------------------------------
@@ -219,6 +219,43 @@ def _status_badge_html(job_id: int, status: str) -> str:
     }
     cls = colors.get(status, "bg-gray-100 text-gray-800")
     return f'<span id="status-badge-{job_id}" class="px-2 py-1 rounded text-sm font-medium {cls}">{status}</span>'
+
+
+# --- Manual prompt page ---
+
+@app.get("/manual", response_class=HTMLResponse)
+async def manual_page(request: Request):
+    return templates.TemplateResponse("manual.html", {"request": request, "prompt": None, "error": None})
+
+
+@app.post("/manual", response_class=HTMLResponse)
+async def manual_generate(
+    request: Request,
+    description: Annotated[str, Form()],
+    company: Annotated[str, Form()] = "",
+    title: Annotated[str, Form()] = "",
+    job_url: Annotated[str, Form()] = "",
+):
+    prompt = None
+    error = None
+    try:
+        prompt = generate_from_raw(
+            description=description,
+            company=company,
+            title=title,
+            job_url=job_url,
+        )
+    except Exception as e:
+        error = str(e)
+
+    # HTMX posts get just the result fragment; full page loads get the whole template
+    if "HX-Request" in request.headers:
+        return templates.TemplateResponse(
+            "manual_result.html", {"request": request, "prompt": prompt, "error": error}
+        )
+    return templates.TemplateResponse(
+        "manual.html", {"request": request, "prompt": prompt, "error": error}
+    )
 
 
 # --- Manual scrape trigger ---

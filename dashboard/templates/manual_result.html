@@ -1,0 +1,34 @@
+{% if error %}
+<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">
+  {{ error }}
+</div>
+
+{% elif prompt %}
+<div class="bg-white rounded-lg border border-gray-200 p-6 h-full flex flex-col gap-3">
+  <div class="flex items-center justify-between">
+    <span class="text-sm font-medium text-gray-700">Generated prompt</span>
+    <button onclick="copyManualPrompt()"
+      class="text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-100">
+      Copy
+    </button>
+  </div>
+  <textarea id="manual-prompt-textarea" readonly
+    class="flex-1 min-h-96 font-mono text-xs bg-gray-900 text-green-300 rounded p-4 border-0 resize-y focus:outline-none"
+  >{{ prompt }}</textarea>
+</div>
+<script>
+  function copyManualPrompt() {
+    const ta = document.getElementById('manual-prompt-textarea');
+    navigator.clipboard.writeText(ta.value).then(() => {
+      const btn = event.target;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  }
+</script>
+
+{% else %}
+<div class="bg-white rounded-lg border border-dashed border-gray-300 p-6 flex items-center justify-center text-sm text-gray-400 min-h-48">
+  Your prompt will appear here.
+</div>
+{% endif %}
