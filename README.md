@@ -19,7 +19,7 @@ You copy the prompt into any chatbot (ChatGPT, Claude, Gemini, etc.) to produce 
 ### 1. Clone and set up
 
 ```bash
-git clone https://github.com/your-username/jobSeeker
+git clone https://github.com/usr-wwelsh/jobSeeker
 cd jobSeeker
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
