@@ -6,6 +6,7 @@ Usage:
 """
 import os
 import sqlite3
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -14,8 +15,13 @@ from matcher.match import find_relevant_chunks
 
 load_dotenv()
 
+RESUME_PATH = Path(__file__).resolve().parent.parent / "data" / "resume.txt"
+
 PROMPT_TEMPLATE = """\
 You are helping craft a hyper-personalized job application for {name}.
+
+## About {name}
+{resume}
 
 ## Target Role
 Company: {company}
@@ -44,6 +50,14 @@ Write a concise cover letter / pitch (3–4 paragraphs) that:
 4. Closes with a direct ask for a call or interview
 5. Tone: direct, builder-to-builder, no corporate fluff
 """
+
+
+def _load_resume() -> str:
+    if not RESUME_PATH.exists():
+        print(f"WARNING: No resume found at {RESUME_PATH}. Add your resume as data/resume.txt.")
+        return "(No resume provided)"
+    text = RESUME_PATH.read_text(encoding="utf-8").strip()
+    return text if text else "(resume file is empty)"
 
 
 CODE_SECTION_TEMPLATE = """\
@@ -81,6 +95,7 @@ def _build(name: str, company: str, title: str, date_posted: str,
 
     return PROMPT_TEMPLATE.format(
         name=name,
+        resume=_load_resume(),
         company=company,
         title=title,
         date_posted=date_posted,
