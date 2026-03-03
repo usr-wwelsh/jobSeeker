@@ -7,7 +7,7 @@ A local-first job-hunting engine that indexes your GitHub portfolio into a vecto
 1. **Indexer** — clones all your public GitHub repos and chunks them into a local ChromaDB vector store
 2. **Scraper** — pulls fresh job listings daily via [JobSpy](https://github.com/speedyapply/JobSpy) (LinkedIn + Indeed)
 3. **Matcher** — semantic search finds the code from your portfolio most relevant to each job description
-4. **Prompt builder** — assembles a ready-to-copy prompt referencing your actual files and repos
+4. **Prompt builder** — assembles a ready-to-copy prompt containing your resume and referencing your actual files and repos
 5. **Dashboard** — private web UI to browse scraped jobs, generate prompts, track application status, and manually generate prompts from any job description you paste in
 
 You copy the prompt into any chatbot (ChatGPT, Claude, Gemini, etc.) to produce the final pitch. No API keys required for the core workflow.
@@ -43,7 +43,18 @@ GITHUB_TOKEN=ghp_...   # optional but recommended
 
 `GITHUB_TOKEN` raises the GitHub API rate limit from 60 to 5,000 requests/hour. Generate one at https://github.com/settings/tokens (no scopes needed for public repos).
 
-### 3. Index your portfolio
+### 3. Add your resume
+
+Create `data/resume.txt` and paste in your plain-text resume:
+
+```bash
+mkdir -p data
+# paste your resume into data/resume.txt
+```
+
+This file is included verbatim in every generated prompt so the LLM has full context about your background. If the file is missing, prompt generation still works but will warn you.
+
+### 4. Index your portfolio
 
 ```bash
 python -m indexer.build_index
@@ -55,7 +66,7 @@ Options:
 - `--incremental` — upsert only, skip wiping the collection
 - `--skip-clone` — skip git operations, re-index from existing `data/repos/`
 
-### 4. Scrape jobs
+### 5. Scrape jobs
 
 ```bash
 python -m scraper.job_scraper
@@ -63,7 +74,7 @@ python -m scraper.job_scraper
 
 Scrapes LinkedIn and Indeed for founding/early-stage roles and internships/new-grad roles posted in the last 24 hours. Results go into `data/jobs.db`.
 
-### 5. Start the dashboard
+### 6. Start the dashboard
 
 ```bash
 uvicorn dashboard.app:app --reload --port 8080
@@ -106,7 +117,8 @@ jobSeeker/
 ├── data/                   # gitignored — generated locally
 │   ├── repos/              # cloned repos (never auto-deleted)
 │   ├── chroma_data/        # ChromaDB persistent store
-│   └── jobs.db             # SQLite job listings
+│   ├── jobs.db             # SQLite job listings
+│   └── resume.txt          # your plain-text resume (create manually)
 ├── Dockerfile              # optional Railway deployment
 ├── .env.example
 └── requirements.txt
